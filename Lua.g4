@@ -1,7 +1,7 @@
 grammar Lua;
 
 @members {
-   public static String grupo="<RAs dos membros do grupo>";
+   public static String grupo="619680 619884 726549 ";
 }
 
 programa
@@ -192,7 +192,8 @@ EscapedLITERAL_STRING
     | '\u201C' (Escape | .)*? ('\u201D' | '\u2033')   // smart quotes
     ;
 
-WHITESPACE  
+// Regra para ignorar espaços tabulações e linebreaks
+WHITESPACE
     : [ \t\u000C\r\n]+ -> skip
     ;
 
