@@ -4,7 +4,10 @@ grammar Lua;
    public static String grupo="<RAs dos membros do grupo>";
 }
 
-
+programa
+    : eval
+    ;
+ 
 eval
     : codigo EOF
     ;
@@ -81,32 +84,29 @@ opConcat : '..';
 opUnario : 'not' | '#' | '-' | '~';
 opPower : '^';
 
-//
 prefixexp
-    : varOrExp nameAndArgs*
+    : (var | '(' exp ')') nameAndArguments*
     ;
 
 functioncall
-    : prefixexp nameAndArgs+
-    ;
-
-varOrExp
-    : var | '(' exp ')'
+    : (var | '(' exp ')') nameAndArguments+
     ;
 
 var
-    : (NAME | '(' exp ')' varSuffix) varSuffix*
+    : (NAME | expAndVarSuffix) varSuffix*
     ;
 
 varSuffix
-    : nameAndArgs* ('[' exp ']' | '.' NAME)
+    : nameAndArguments* ('[' exp ']' | '.' NAME)
     ;
 
-nameAndArgs
-    : (':' NAME)? args
+expAndVarSuffix
+    : '(' exp ')' varSuffix
     ;
 
-args: '(' listaExpr? ')' | tableconstructor | LITERAL_STRING;
+nameAndArguments
+    : (':' NAME)? ('(' listaExpr? ')' | tableconstructor | LITERAL_STRING)
+    ;
 
 
 //https://www.lua.org/manual/5.3/manual.html#3.4.
@@ -126,33 +126,25 @@ NUMERAL
     : INT | HEX | FLOAT
     ;
 
-
 LITERAL_STRING
     : EscapedLITERAL_STRING;
 
-// LEXER
 
-NAME: [a-zA-Z_][a-zA-Z_0-9]*;
+// REGRAS LÉXICAS ------------------------------------------------------------
 
-// NEM DEUS SABE COMO ISSO FUNCIONA https://stackoverflow.com/questions/29800106/how-do-i-escape-an-escape-character-with-antlr-4
-EscapedLITERAL_STRING
-    : '"'      (Escape | '""'   | ~["])* '"'
-    | '\''     (Escape | '\'\'' | ~['])* '\''
-    | '\u201C' (Escape | .)*? ('\u201D' | '\u2033')   // smart quotes
+fragment
+LetterUppercase
+    : [A-Z]
     ;
 
-fragment Escape
-    : '\u0060\''    // backtick single-quote
-    | '\u0060"'     // backtick double-quote
+fragment
+LetterLowercase
+    : [a-z]
     ;
 
-
-INT
-    : Digit+
-    ;
-
-HEX
-    : '0' ('x'|'X') DigitoHex+
+fragment
+Letter
+    : (LetterLowercase | LetterUppercase)
     ;
 
 fragment
@@ -165,17 +157,50 @@ DigitoHex
     : Digit | ('A'..'F') | ('a'..'f')
     ;
 
+INT
+    : Digit+
+    ;
+
+HEX
+    : '0' ('x'|'X') DigitoHex+
+    ;
+
 FLOAT
      :   Digit+ '.' Digit* EXPOENTE?
      ;
+
 fragment
 EXPOENTE
      : ('e'|'E') ('+'|'-')? Digit+
      ;
+
+fragment
+Escape
+    : '\u0060\''    // backtick single-quote
+    | '\u0060"'     // backtick double-quote
+    ;
+
+// NEM DEUS SABE COMO ISSO FUNCIONA https://stackoverflow.com/questions/29800106/how-do-i-escape-an-escape-character-with-antlr-4
+//EscapedLITERAL_STRING usado para ignorar qualquer caracter dentro de um comentário (inclusive caracteres delimitadores de comentário)
+EscapedLITERAL_STRING
+    : '"'      (Escape | '""'   | ~["])* '"'
+    | '\''     (Escape | '\'\'' | ~['])* '\''
+    | '\u201C' (Escape | .)*? ('\u201D' | '\u2033')   // smart quotes
+    ;
+
+WHITESPACE  
+    : [ \t\u000C\r\n]+ -> skip
+    ;
+
+// NAME: Iniciam-se por uma letra ou '_' e é seguido de zero ou mais letras, digitos ou '_'
+NAME: (Letter | '_') (Letter | Digit | '_')*;
+
+// COMMENT: Cadeia de caracteres delimitada por '--[' e ']' 
 COMMENT
     : '--[' LITERAL_STRING ']' -> channel(HIDDEN)
     ;
     
+// LINE_COMMENT: Cadeia de caracteres que inicia-se com '--' e termina ao final da linha (mas pode não começar no início da linha)
 LINE_COMMENT
     : '--'
     (                                               // --
@@ -184,8 +209,4 @@ LINE_COMMENT
     | ~('['|'\r'|'\n') ~('\r'|'\n')*                // --AAA
     ) ('\r\n'|'\r'|'\n'|EOF)
     -> channel(HIDDEN)
-    ;
-    
-WHITESPACE  
-    : [ \t\u000C\r\n]+ -> skip
     ;
