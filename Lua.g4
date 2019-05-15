@@ -27,9 +27,9 @@ stat
     | 'while' exp 'do' codigo 'end'
     | 'repeat' codigo 'until' exp
     | 'if' exp 'then' codigo ('elseif' exp 'then' codigo)* ('else' codigo)? 'end'
-    | 'for' NAME '=' exp ',' exp (',' exp)? 'do' codigo 'end'
+    | 'for' NAME { TabelaDeSimbolos.adicionarSimbolo(($NAME.text),Tipo.VARIAVEL); } '=' exp ',' exp (',' exp)? 'do' codigo 'end'
     | 'for' namelist 'in' listaExpr 'do' codigo 'end'
-    | 'function' funcname funcbody
+    | 'function' funcname { TabelaDeSimbolos.adicionarSimbolo(($funcname.text),Tipo.FUNCAO); } funcbody
     | 'local' 'function' NAME funcbody
     | 'local' namelist ('=' listaExpr)?
     ;
@@ -47,11 +47,11 @@ funcname
     ;
 
 varlist
-    : var (',' var)*
+    : var { TabelaDeSimbolos.adicionarSimbolo(($var.text),Tipo.VARIAVEL); } (',' var { TabelaDeSimbolos.adicionarSimbolo(($var.text),Tipo.VARIAVEL); })*
     ;
 
 namelist
-    : NAME (',' NAME)*
+    : NAME { TabelaDeSimbolos.adicionarSimbolo(($NAME.text),Tipo.VARIAVEL); } (',' NAME { TabelaDeSimbolos.adicionarSimbolo(($NAME.text),Tipo.VARIAVEL); })*
     ;
 
 listaExpr
@@ -85,11 +85,15 @@ opUnario : 'not' | '#' | '-' | '~';
 opPower : '^';
 
 prefixexp
-    : (var | '(' exp ')') nameAndArguments*
+    : varOrExp nameAndArguments* 
     ;
 
 functioncall
-    : (var | '(' exp ')') nameAndArguments+
+    : varOrExp nameAndArguments+ { TabelaDeSimbolos.adicionarSimbolo(($varOrExp.text),Tipo.FUNCAO); }
+    ;
+
+varOrExp
+    : var | '(' exp ')'
     ;
 
 var
@@ -110,7 +114,7 @@ nameAndArguments
 
 
 //https://www.lua.org/manual/5.3/manual.html#3.4.
-functiondef: 'function' funcbody;
+functiondef: 'function' funcname funcbody;
 funcbody: '(' parlist? ')' codigo 'end' ;
 parlist: namelist (',' '...')? | '...';
 
