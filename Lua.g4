@@ -29,7 +29,7 @@ stat
     | 'if' exp 'then' codigo ('elseif' exp 'then' codigo)* ('else' codigo)? 'end'
     | 'for' NAME { TabelaDeSimbolos.adicionarSimbolo(($NAME.text),Tipo.VARIAVEL); } '=' exp ',' exp (',' exp)? 'do' codigo 'end'
     | 'for' namelist 'in' listaExpr 'do' codigo 'end'
-    | 'function' funcname { TabelaDeSimbolos.adicionarSimbolo(($funcname.text),Tipo.FUNCAO); } funcbody
+    | functiondef
     | 'local' 'function' NAME funcbody
     | 'local' namelist ('=' listaExpr)?
     ;
@@ -65,6 +65,7 @@ exp
     | functiondef
     | '...'
     | prefixexp
+    | functioncall
     | exp opLogica exp
     | exp opComparacao exp
     | exp opBin exp
@@ -85,15 +86,19 @@ opUnario : 'not' | '#' | '-' | '~';
 opPower : '^';
 
 prefixexp
-    : varOrExp nameAndArguments* 
+    : varOrExp (tableconstructor | LITERAL_STRING)* 
     ;
 
 functioncall
-    : varOrExp nameAndArguments+ { TabelaDeSimbolos.adicionarSimbolo(($varOrExp.text),Tipo.FUNCAO); }
+    : varOrExpFUNCAO nameAndArguments+ { TabelaDeSimbolos.adicionarSimbolo(($varOrExpFUNCAO.text),Tipo.FUNCAO); }
+    ;
+
+varOrExpFUNCAO
+    : var | '(' exp ')'
     ;
 
 varOrExp
-    : var | '(' exp ')'
+    : var { TabelaDeSimbolos.adicionarSimbolo(($var.text),Tipo.VARIAVEL); } | '(' exp ')'
     ;
 
 var
@@ -114,7 +119,7 @@ nameAndArguments
 
 
 //https://www.lua.org/manual/5.3/manual.html#3.4.
-functiondef: 'function' funcname funcbody;
+functiondef: 'function' funcname { TabelaDeSimbolos.adicionarSimbolo(($funcname.text),Tipo.FUNCAO); } funcbody;
 funcbody: '(' parlist? ')' codigo 'end' ;
 parlist: namelist (',' '...')? | '...';
 
