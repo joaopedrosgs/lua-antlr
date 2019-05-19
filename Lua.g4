@@ -1,21 +1,25 @@
 grammar Lua;
 
 @members {
-   public static String grupo="619680 619884 726549 ";
+   public static String grupo="619680 619884 726549";
 }
 
+// Regra programa para funcionar no Corrigir.java
 programa
     : eval
     ;
  
+// Regra eval para funcionar no TestaAnalisadorSintatico.java
 eval
     : codigo EOF
     ;
 
+// Regra que define um código LUA. Uma sequência de declarações com uma possível declaração de retorno no final.
 codigo
     : stat* retorno?
     ;
 
+// Regra principal com todos os tipos de declarações em LUA.
 stat
     : ';'
     | varlist '=' listaExpr
@@ -46,6 +50,9 @@ funcname
     : NAME ('.' NAME)* (':' NAME)?
     ;
 
+// Regra usada para definir listas de variaveis. É usada uma regra separada por
+// que essa lista de varíaveis pode ser usada em vários casos, como por exemplo
+// na atribuição multipla
 varlist
     : var { TabelaDeSimbolos.adicionarSimbolo(($var.text),Tipo.VARIAVEL); } (',' var { TabelaDeSimbolos.adicionarSimbolo(($var.text),Tipo.VARIAVEL); })*
     ;
@@ -58,6 +65,7 @@ listaExpr
     : exp (',' exp)*
     ;
 
+// 
 exp
     : 'nil' | 'false' | 'true'
     | NUMERAL
