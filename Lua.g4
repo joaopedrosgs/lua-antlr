@@ -38,14 +38,18 @@ stat
     | 'local' namelist ('=' listaExpr)?
     ;
 
+// define o return, lembrando que return pode receber varias expressoes (ou nenhuma)
 retorno
     : 'return' listaExpr? ';'?
     ;
 
+// sintaxe definida aqui https://www.lua.org/manual/5.3/manual.html#3.3.4
+// labels sao marcacoes no codigo usados pelo goto
 label
     : '::' NAME '::'
     ;
 
+// sintaxe definida aqui https://www.lua.org/manual/5.3/manual.html#3.3.11
 funcname
     : NAME ('.' NAME)* (':' NAME)?
     ;
@@ -65,7 +69,8 @@ listaExpr
     : exp (',' exp)*
     ;
 
-// 
+// sintaxe definida aqui https://www.lua.org/manual/5.3/manual.html#3.4
+// regra geral para expressoes do lua
 exp
     : 'nil' | 'false' | 'true'
     | NUMERAL
@@ -116,6 +121,8 @@ varOrExpVARIAVEL
     : var { TabelaDeSimbolos.adicionarSimbolo(($var.text),Tipo.VARIAVEL); } | '(' exp ')'
     ;
 
+
+// Define formato de variaveis
 var
     : (NAME | expAndVarSuffix) varSuffix*
     ;
@@ -145,41 +152,48 @@ field: '[' exp ']' '=' exp | NAME '=' exp | exp;
 fieldsep : ',' | ';';
 
 
-
+// Como pedido pelo professor, temos apenas int e float
 NUMERAL
     : INT | FLOAT
     ;
 
+// Valor string
 LITERAL_STRING
     : EscapedLITERAL_STRING;
 
 
 // REGRAS LÉXICAS ------------------------------------------------------------
 
+// Letra maiuscula
 fragment
 LetterUppercase
     : [A-Z]
     ;
 
+// Letra minuscula
 fragment
 LetterLowercase
     : [a-z]
     ;
 
+// Letras
 fragment
 Letter
     : (LetterLowercase | LetterUppercase)
     ;
 
+// Um digito decimal
 fragment
 Digit
     : [0-9]
     ;
     
+// Numeros de um digito ou mais
 INT
     : Digit+
     ;
 
+// Float com expoente opcional
 FLOAT
      :   Digit+ '.' Digit* EXPOENTE?
      ;
