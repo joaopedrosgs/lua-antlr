@@ -84,6 +84,8 @@ exp
     | <assoc=right> exp opPower exp
     ;
 
+// Regras para definição de diferentes tipos de operadores
+// Necessário para tratamento de precedência entre operadores 
 opLogica : 'or'|'and';
 opComparacao: '<' | '>' | '<=' | '>=' | '~=' | '==' ;
 opBin: '|'|'~'|'&'|'<<'| '>>';
@@ -94,18 +96,23 @@ opUnario : 'not' | '#' | '-' | '~';
 opPower : '^';
 
 prefixexp
-    : varOrExp (tableconstructor | LITERAL_STRING)* 
+    : varOrExpVARIAVEL (tableconstructor | LITERAL_STRING)* 
     ;
 
 functioncall
-    : varOrExpFUNCAO nameAndArguments+ { TabelaDeSimbolos.adicionarSimbolo(($varOrExpFUNCAO.text),Tipo.FUNCAO); }
+    : varOrExpFUNCAO nameAndArguments+
     ;
+
+//Separação entre varOrExpFUNCAO e varOrExpVARIAVEL foi necessária para
+//preenchimento da tabela de símbolos. Apesar de terem a mesma regra, elas
+//adicionam respectivamente um novo símbolo do tipo FUNCAO ou um novo símbolo
+//do tipo VARIAVEL
 
 varOrExpFUNCAO
-    : var | '(' exp ')'
+    : var { TabelaDeSimbolos.adicionarSimbolo(($var.text),Tipo.FUNCAO); } | '(' exp ')'
     ;
 
-varOrExp
+varOrExpVARIAVEL
     : var { TabelaDeSimbolos.adicionarSimbolo(($var.text),Tipo.VARIAVEL); } | '(' exp ')'
     ;
 
@@ -188,8 +195,8 @@ Escape
     | '\u0060"'     // backtick double-quote
     ;
 
-//https://stackoverflow.com/questions/29800106/how-do-i-escape-an-escape-character-with-antlr-4
-//EscapedLITERAL_STRING usado para ignorar qualquer caracter dentro de um comentário (inclusive caracteres delimitadores de comentário)
+//EscapedLITERAL_STRING usado para ignorar qualquer caracter dentro de um comentário
+//(inclusive caracteres delimitadores de comentário)
 EscapedLITERAL_STRING
     : '"'      (Escape | '""'   | ~["])* '"'
     | '\''     (Escape | '\'\'' | ~['])* '\''
@@ -209,7 +216,8 @@ COMMENT
     : '--[' LITERAL_STRING ']' -> channel(HIDDEN)
     ;
     
-// LINE_COMMENT: Cadeia de caracteres que inicia-se com '--' e termina ao final da linha (mas pode não começar no início da linha)
+// LINE_COMMENT: Cadeia de caracteres que inicia-se com '--' e termina ao final da linha
+// (mas pode não começar no início da linha)
 LINE_COMMENT
     : '--'
     (                                               // --
