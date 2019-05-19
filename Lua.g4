@@ -132,7 +132,7 @@ fieldsep : ',' | ';';
 
 
 NUMERAL
-    : INT | HEX | FLOAT
+    : INT | FLOAT
     ;
 
 LITERAL_STRING
@@ -160,18 +160,9 @@ fragment
 Digit
     : [0-9]
     ;
-
-fragment
-DigitoHex
-    : Digit | ('A'..'F') | ('a'..'f')
-    ;
-
+    
 INT
     : Digit+
-    ;
-
-HEX
-    : '0' ('x'|'X') DigitoHex+
     ;
 
 FLOAT
@@ -180,7 +171,7 @@ FLOAT
 
 fragment
 EXPOENTE
-     : ('e'|'E') ('+'|'-')? Digit+
+     : ('e'|'E') Digit+
      ;
 
 fragment
@@ -189,7 +180,7 @@ Escape
     | '\u0060"'     // backtick double-quote
     ;
 
-// NEM DEUS SABE COMO ISSO FUNCIONA https://stackoverflow.com/questions/29800106/how-do-i-escape-an-escape-character-with-antlr-4
+//https://stackoverflow.com/questions/29800106/how-do-i-escape-an-escape-character-with-antlr-4
 //EscapedLITERAL_STRING usado para ignorar qualquer caracter dentro de um comentário (inclusive caracteres delimitadores de comentário)
 EscapedLITERAL_STRING
     : '"'      (Escape | '""'   | ~["])* '"'
